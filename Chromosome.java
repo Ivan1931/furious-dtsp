@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.TreeSet;
 
 class Chromosome {
 
@@ -38,7 +39,7 @@ class Chromosome {
 
     Chromosome(City[] cities, int[] cityList) {
         this.cityList = cityList;
-        calculateCost(cities);
+        this.calculateCost(cities);
     }
 
     /**
@@ -80,6 +81,71 @@ class Chromosome {
             mutatedCityList[b-i] = temp;
         }
         return new Chromosome(cities, mutatedCityList);
+    }
+
+    private int[] randomRange(int upperBound) {
+        int start = 0, end = 0;
+        Random r = new Random();
+        do {
+            start = r.nextInt(upperBound);
+            end = r.nextInt(upperBound);
+        } while(start != end);
+        if (end < start) {
+            int temp = start;
+            start = end;
+            end = temp;
+        }
+        return new int[] { start, end };
+    }
+
+    public Chromosome pmx(City[] cities,  Chromosome mate) {
+        int length = cityList.length;
+        int[] x = randomRange(length);
+        int[] newList = new int[length];
+        // Store all the things that we have already placed for easy access
+        TreeSet<Integer> placed = new TreeSet<Integer>();
+        // Place the middle segment
+        for (int i = x[0]; i < x[1]; i++) {
+            int candidate = getCity(i);
+            newList[i] = candidate;
+            placed.add(candidate);
+        }
+        /** For each element in middle segment of mate
+         *  -> If it has not been placed
+         *      -> Check the element from first list already placed that is in it's segment
+         *      -> Find elements index in mate
+         *      -> Place unplaced element in that index
+         **/
+        for (int i = x[0]; i < x[1]; i++) {
+            int candidate = mate.getCity(i);
+            if (!placed.contains(candidate)) {
+                int searchFor = newList[i];
+                for (int j = 0; j < length; j++) {
+                    if (mate.getCity(j) == searchFor) {
+                        newList[j] = candidate;
+                        placed.add(candidate);
+                        break;
+                    }
+                }
+            }
+        }
+        /**
+         * Copy all remaining unplaced elements from mate into final list
+         **/
+        for (int i = 0; i < length; i++) {
+            int candidate = mate.getCity(i);
+            if (!placed.contains(candidate)) {
+                newList[i] = candidate;
+            }
+        }
+        return new Chromosome(cities, newList);
+    }
+
+    void printOut() {
+        for (int city : cityList) {
+            System.out.print(city + " ");
+        }
+        System.out.println("\n");
     }
 
     /**

@@ -13,6 +13,8 @@ import java.awt.*;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.Collections;
 
 import javax.swing.*;
 
@@ -139,6 +141,173 @@ public class TSP {
         for (Chromosome mutant : bestMutants) {
             chromosomes[chromosomes.length - idx - 1] = mutant;
             idx += 1;
+        }
+    }
+
+    public static ArrayList<Chromosome> getTournamentSelection(int k, int tournaments) {
+        assert(tournaments % 2 == 0);
+        ArrayList<Chromosome> breaders = new ArrayList<>();
+        int length = chromosomes.length;
+        Random r = new Random();
+        for (int i = 0; i < tournaments; i++) {
+            ArrayList<Chromosome> tournament = new ArrayList<>();
+            for (int j = 0; j < k; j++) {
+                int idx = r.nextInt(length);
+                tournament.add(chromosomes[idx]);
+            }
+            breaders.add(
+                    tournament
+                        .stream()
+                        .max((c1, c2) -> Double.compare(c1.getCost(), c2.getCost()))
+                        .get()
+            );
+        }
+        return breaders;
+    }
+
+    public static ArrayList<Chromosome> getFitnessProporitional(int k, ArrayList<Chromosome> chromos) {
+        ArrayList<Chromosome> chosen = new ArrayList<>();
+        int length = chromos.size();
+        chromos = chromos.stream()
+               .sorted((c1, c2) -> {
+                   return Double.compare(c1.getCost(), c2.getCost());
+               })
+               .collect(Collectors.toCollection(ArrayList::new));
+        Random r = new Random();
+        while (chosen.size() < k) {
+            for (int i = 0; i < chromos.size(); i++) {
+                double p = (length - i - 1.0) / (double) length;
+                double d = r.nextDouble();
+                if (d < p) {
+                    chosen.add(chromos.get(i));
+                    chromos.remove(i);
+                    if (k <= chosen.size()) {
+                        break;
+                    }
+                }
+            }
+
+        }
+        return chosen;
+    }
+
+    public static ArrayList<Chromosome> getElite(int number, double eliteInfluence, ArrayList<Chromosome> population) {
+        ArrayList<Chromosome> elite = population.stream()
+                         .sorted((p1, p2) -> Double.compare(p1.getCost(), p2.getCost()))
+                         .limit(number)
+                         .collect(Collectors.toCollection(ArrayList::new));
+        Random r = new Random();
+        for (int i = 0; i < number; i++) {
+            double p = r.nextDouble();
+            if (eliteInfluence < p) {
+                int idx = r.nextInt(population.size());
+                elite.set(i, population.get(idx));
+            }
+        }
+        return elite;
+
+    }
+
+    public static void eliteTournament() {
+        int numberParents = 8;
+        int tournamentDiversity = 4;
+        ArrayList<Chromosome> offspring = getTournamentSelection(tournamentDiversity, numberParents);
+        for (int i = 0; i < numberParents; i += 2) {
+            Chromosome p1 = offspring.get(i);
+            Chromosome p2 = offspring.get(i+1);
+            offspring.add(p1.pmx(cities, p2));
+            offspring.add(p2.pmx(cities, p1));
+        }
+        for (Chromosome c: chromosomes) {
+            offspring.add(c);
+        }
+        offspring = getElite(chromosomes.length, 0.7, offspring);
+        for (int i = 0; i < chromosomes.length; i++) {
+            chromosomes[i] = offspring.get(i);
+        }
+    }
+
+    public static ArrayList<Chromosome> getBest(int number) {
+        ArrayList<Chromosome> best = new ArrayList<>();
+        Chromosome.sortChromosomes(chromosomes, chromosomes.length);
+        for (int i = 0 ; i < number; i++) {
+            best.add(chromosomes[i]);
+        }
+        return best;
+    }
+
+    public static ArrayList<Chromosome> getWorst(int number) {
+        ArrayList<Chromosome> worst = new ArrayList<>();
+        int length = chromosomes.length;
+        Chromosome.sortChromosomes(chromosomes, length);
+        for (int i = 0 ; i < number; i++) {
+            worst.add(chromosomes[length - i - 1]);
+        }
+        return worst;
+    }
+
+    public static ArrayList<Chromosome> getRandom(int start, int end, int number) {
+        TreeSet<Integer> chosen = new TreeSet<>();
+        assert(0 < (end - start));
+        assert(number < (end - start));
+        Random r = new Random();
+        int d = end - start;
+        ArrayList<Chromosome> randoms = new ArrayList<>();
+        while (chosen.size() < number) {
+            int idx = start + r.nextInt(d);
+            if (!chosen.contains(idx)) {
+                chosen.add(idx);
+                randoms.add(chromosomes[idx]);
+            }
+        }
+        return randoms;
+    }
+
+    public static ArrayList<Chromosome> sortByFitness(ArrayList<Chromosome> zomes) {
+        return zomes.stream()
+                    .sorted((c1, c2) -> {
+                        return Double.compare(c1.getCost(), c2.getCost());
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public static ArrayList<Chromosome> getTopN(ArrayList<Chromosome> zomes, int n) {
+        return zomes.stream()
+                    .sorted((c1, c2) -> {
+                        return Double.compare(c1.getCost(), c2.getCost());
+                    })
+                    .limit(n)
+                    .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public static void eliteSelection() {
+        int length = chromosomes.length;
+        int numberBest = 10;
+        int numberAverage = 4;
+        int numberWorst = 4;
+        ArrayList<Chromosome> best = getBest(numberBest);
+        ArrayList<Chromosome> children = new ArrayList<Chromosome>();
+        ArrayList<Chromosome> average = getRandom(numberBest, length-numberWorst, numberAverage);
+        best.addAll(average);
+        Collections.shuffle(best); // shuffle to increase genetic diversity
+        for (int i = 0; i < best.size(); i+=2) {
+            Chromosome p1 = best.get(i);
+            Chromosome p2 = best.get(i+1);
+            Chromosome child1 = p1.pmx(cities, p2);
+            Chromosome child2 = p2.pmx(cities, p1);
+            /*
+            p1.printOut();
+            p2.printOut();
+            child1.printOut();
+            child2.printOut();
+            */
+            children.add(child1);
+            children.add(child2);
+        }
+        children.addAll(getWorst(numberWorst));
+        children = getTopN(children, numberWorst);
+        for (int i = 0; i < numberWorst; i++) {
+            chromosomes[length - i - 1] = children.get(i);
         }
     }
 
