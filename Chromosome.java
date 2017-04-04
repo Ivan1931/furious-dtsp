@@ -56,17 +56,15 @@ class Chromosome {
         cost += cities[cityList[0]].proximity(cities[cityList[cityList.length - 1]]); //Adding return home
     }
 
+    private Random r = new Random();
+
     public Chromosome mutate(City[] cities) {
         int length = cityList.length;
         boolean good = false;
         int a = 0, b = 0;
-        Random r = new Random();
-        while (!good) {
+        while (a == b) {
             a = r.nextInt(length);
             b = r.nextInt(length);
-            if (a != b) {
-                good = true;
-            }
         }
         if (b < a) {
             int temp = b;
@@ -74,7 +72,11 @@ class Chromosome {
             a = temp;
         }
         int interval = b - a;
-        int[] mutatedCityList = cityList.clone();
+        int[] mutatedCityList = new int[length];
+        for (int i = 0; i < length; i++) {
+            mutatedCityList[i] = getCity(i);
+        }
+    
         for (int i = 0; i < interval/2; i++) {
             int temp = mutatedCityList[a+i];
             mutatedCityList[a+i] = mutatedCityList[b-i];
@@ -85,7 +87,6 @@ class Chromosome {
 
     private int[] randomRange(int upperBound) {
         int start = 0, end = 0;
-        Random r = new Random();
         do {
             start = r.nextInt(upperBound);
             end = r.nextInt(upperBound);

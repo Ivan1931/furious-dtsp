@@ -123,24 +123,23 @@ public class TSP {
         }
     }
 
-    public static void inversionMutation(int mutantPool) {
-        LinkedList<Chromosome> mutants = new LinkedList<>();
+    public static void inversionMutation(int mutationRate) {
         Chromosome.sortChromosomes(chromosomes, chromosomes.length);
-        for (int i = 0; i < mutantPool; i++) {
-            Chromosome c = chromosomes[chromosomes.length - i - 1];
-            mutants.add(c);
-            mutants.add(c.mutate(cities));
-        }
-        List<Chromosome> bestMutants = mutants.stream()
-               .sorted((c1, c2) -> {
-                   return Double.compare(c1.getCost(), c2.getCost());
-               })
-               .limit(mutantPool)
-               .collect(Collectors.toList());
-        int idx = 0;
-        for (Chromosome mutant : bestMutants) {
-            chromosomes[chromosomes.length - idx - 1] = mutant;
-            idx += 1;
+        int last_idx = chromosomes.length - 1;
+        for (int i = 0; i < mutationRate; i++) {
+            Chromosome worst = chromosomes[last_idx];
+            Chromosome best = chromosomes[0];
+            Chromosome mutant = best.mutate(cities);
+            chromosomes[last_idx] = mutant;
+            for (int k = chromosomes.length - 1; 1 <= k; k--) {
+                if (chromosomes[k].getCost() < chromosomes[k-1].getCost()) {
+                    Chromosome temp = chromosomes[k];
+                    chromosomes[k] = chromosomes[k-1];
+                    chromosomes[k-1] = temp;
+                } else {
+                    break;
+                }
+            }
         }
     }
 
@@ -312,7 +311,7 @@ public class TSP {
     }
 
     public static void evolve() {
-        inversionMutation(100);
+        inversionMutation(350);
         checkSanity();
     }
 
