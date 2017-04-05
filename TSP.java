@@ -115,6 +115,9 @@ public class TSP {
         System.out.println(content);
     }
 
+    /**
+     * WRITTEN - checks that we do not have a chromosome with duplicate elements
+     **/
     public static void checkSanity() {
         for (Chromosome chromo: chromosomes) {
             if (chromo.hasDuplicates()) {
@@ -123,6 +126,10 @@ public class TSP {
         }
     }
 
+    /**
+     * WRITTEN - Performs inversion mutation by replacing the worst element with
+     * the best element. Performs this mutationRate times.
+     */
     public static void inversionMutation(int mutationRate) {
         Chromosome.sortChromosomes(chromosomes, chromosomes.length);
         int last_idx = chromosomes.length - 1;
@@ -143,6 +150,11 @@ public class TSP {
         }
     }
 
+    private static Random r = new Random();
+
+    /**
+     * Written performs tournament selection on our population
+     */
     public static ArrayList<Chromosome> getTournamentSelection(int k, int tournaments) {
         assert(tournaments % 2 == 0);
         TreeSet<Integer> breaders = new TreeSet<>();
@@ -157,7 +169,7 @@ public class TSP {
             breaders.add(
                     tournament
                         .stream()
-                        .max((c1, c2) -> {
+                        .min((c1, c2) -> {
                             return Double.compare(chromosomes[c1].getCost(), 
                                                chromosomes[c2].getCost());
                         })
@@ -171,49 +183,28 @@ public class TSP {
         return winners;
     }
 
-    public static ArrayList<Chromosome> getFitnessProporitional(int k, ArrayList<Chromosome> chromos) {
-        ArrayList<Chromosome> chosen = new ArrayList<>();
-        int length = chromos.size();
-        chromos = chromos.stream()
-               .sorted((c1, c2) -> {
-                   return Double.compare(c1.getCost(), c2.getCost());
-               })
-               .collect(Collectors.toCollection(ArrayList::new));
-        Random r = new Random();
-        while (chosen.size() < k) {
-            for (int i = 0; i < chromos.size(); i++) {
-                double p = (length - i - 1.0) / (double) length;
-                double d = r.nextDouble();
-                if (d < p) {
-                    chosen.add(chromos.get(i));
-                    chromos.remove(i);
-                    if (k <= chosen.size()) {
-                        break;
-                    }
-                }
-            }
-
-        }
-        return chosen;
-    }
-
-    public static ArrayList<Chromosome> getElite(int number, double eliteInfluence, ArrayList<Chromosome> population) {
-        ArrayList<Chromosome> elite = population.stream()
-                         .sorted((c1, c2) -> {
-                             return Double.compare(c1.getCost(), c2.getCost());
-                         })
-                         .limit(number)
-                         .collect(Collectors.toCollection(ArrayList::new));
-        Random r = new Random();
+    /**
+     * WRITTEN - performs elitism selection on a list of chromosomes
+     **/
+    public static ArrayList<Chromosome> getRandomElite(int number, double elitismRate, ArrayList<Chromosome> offspring) {
+        ArrayList<Chromosome> elite = offspring.stream().sorted((c1, c2) -> {
+                return Double.compare(c1.getCost(), c2.getCost());
+            })
+            .limit(number)
+            .collect(Collectors.toCollection(ArrayList::new));
         for (int i = 0; i < number; i++) {
-            double p = r.nextDouble();
-            int idx = r.nextInt(population.size());
-            elite.set(i, population.get(idx));
+            double d = r.nextDouble();
+            if (elitismRate < d) {
+                int idx = r.nextInt(offspring.size());
+                elite.set(i, offspring.get(idx));
+            }
         }
         return elite;
-
     }
 
+    /**
+     * WRITTEN - performs tournament selection and then survivor selection by a semi-randomised elitism process
+     */
     public static void eliteTournament(int numberParents, int tournamentDiversity, double elitismRate) {
         ArrayList<Chromosome> offspring = getTournamentSelection(tournamentDiversity, numberParents);
         for (int i = 0; i < numberParents; i += 2) {
@@ -225,12 +216,13 @@ public class TSP {
         for (Chromosome c: chromosomes) {
             offspring.add(c);
         }
-        offspring = getElite(chromosomes.length, elitismRate, offspring);
+        offspring = getRandomElite(chromosomes.length, elitismRate, offspring);
         for (int i = 0; i < chromosomes.length; i++) {
             Chromosome replacement = offspring.get(i);
             chromosomes[i] = replacement;
         }
     }
+
 
     public static ArrayList<Chromosome> getBest(int number) {
         ArrayList<Chromosome> best = new ArrayList<>();
@@ -276,49 +268,9 @@ public class TSP {
                     .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public static ArrayList<Chromosome> getTopN(ArrayList<Chromosome> zomes, int n) {
-        return zomes.stream()
-                    .sorted((c1, c2) -> {
-                        return Double.compare(c1.getCost(), c2.getCost());
-                    })
-                    .limit(n)
-                    .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    public static void eliteSelection() {
-        int length = chromosomes.length;
-        int numberBest = 20;
-        int numberAverage = 8;
-        int numberWorst = 4;
-        ArrayList<Chromosome> best = getBest(numberBest);
-        ArrayList<Chromosome> children = new ArrayList<Chromosome>();
-        ArrayList<Chromosome> average = getRandom(numberBest, length-numberWorst, numberAverage);
-        best.addAll(average);
-        Collections.shuffle(best); // shuffle to increase genetic diversity
-        for (int i = 0; i < best.size(); i+=2) {
-            Chromosome p1 = best.get(i);
-            Chromosome p2 = best.get(i+1);
-            Chromosome child1 = p1.pmx(cities, p2);
-            Chromosome child2 = p2.pmx(cities, p1);
-            /*
-            p1.printOut();
-            p2.printOut();
-            child1.printOut();
-            child2.printOut();
-            */
-            children.add(child1);
-            children.add(child2);
-        }
-        children.addAll(getWorst(numberWorst));
-        children = getTopN(children, numberWorst);
-        for (int i = 0; i < numberWorst; i++) {
-            chromosomes[length - i - 1] = children.get(i);
-        }
-    }
-
     public static void evolve() {
-        eliteTournament(20, 4, 0.1);
-        inversionMutation(350);
+        eliteTournament(30, 20, 0.7);
+        inversionMutation(100);
         checkSanity();
     }
 
@@ -362,10 +314,8 @@ public class TSP {
                         cities[last].gety());
                 }
             }
-                        
             int homeCity = chromosomes[0].getCity(0);
             int lastCity = chromosomes[0].getCity(cityCount - 1);
-                        
             //Drawing line returning home
             g.drawLine(
                     cities[homeCity].getx(),
@@ -391,9 +341,8 @@ public class TSP {
             bufferReader.close();
 
         } catch (Exception e) {
-            System.out.println("Error while reading file line by line:" + e.getMessage());                      
+            System.out.println("Error while reading file line by line:" + e.getMessage());
         }
-        
         citiesArray = new City[cities.size()];
         return cities.toArray(citiesArray);
     }
@@ -405,9 +354,7 @@ public class TSP {
         for(int i = 0; i < cities.length; i++) {
         	int x = cities[i].getx();
         	int y = cities[i].gety();
-        	
             int position = randomGenerator.nextInt(5);
-            
             if(position == 1) {
             	y += cityShiftAmount;
             } else if(position == 2) {
@@ -417,10 +364,8 @@ public class TSP {
             } else if(position == 4) {
             	x -= cityShiftAmount;
             }
-            
             newPositions[i] = new City(x, y);
         }
-        
         return newPositions;
     }
 
@@ -440,7 +385,7 @@ public class TSP {
         } else {
 
             if (args.length > 1) {
-                display = true; 
+                display = true;
             }
 
             try {
@@ -457,13 +402,11 @@ public class TSP {
                     frame.setSize(width + 300, height);
                     frame.setResizable(false);
                     frame.setLayout(new BorderLayout());
-                    
                     statsText = new TextArea(35, 35);
                     statsText.setEditable(false);
 
                     statsArea.add(statsText);
                     frame.add(statsArea, BorderLayout.EAST);
-                    
                     frame.setVisible(true);
                 }
 
@@ -502,7 +445,6 @@ public class TSP {
                         if (thisCost < genMin || genMin == 0) {
                             genMin = thisCost;
                         }
-                        
                         NumberFormat nf = NumberFormat.getInstance();
                         nf.setMinimumFractionDigits(2);
                         nf.setMinimumFractionDigits(2);

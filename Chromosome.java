@@ -16,6 +16,8 @@ class Chromosome {
     protected double cost;
 
     /**
+     * GIVEN + WRITTEN
+     * Modified with a heuristic so that cities are typically spawned closer to each other
      * @param cities The order that this chromosome would visit the cities.
      */
     Chromosome(City[] cities) {
@@ -39,7 +41,7 @@ class Chromosome {
         for (int i = 0 ;  i < cityList.length; i++) copyCityList[i] = cityList[i];
 
         int r = generator.nextInt(cityList.length);
-        for(int i = r; i < cityList.length; i++) {
+        for(int i = r; i < cityList.length-1; i++) {
             int closest = i;
             int currentCity = cityList[i];
             double closestDistance = 100000.0;
@@ -52,8 +54,8 @@ class Chromosome {
                 }
             }
             int temp = cityList[closest];
-            cityList[closest] = cityList[i];
-            cityList[i] = temp;
+            cityList[closest] = cityList[i+1];
+            cityList[i+1] = temp;
         }
 
         calculateCost(cities);
@@ -63,6 +65,9 @@ class Chromosome {
         }
     }
 
+    /**
+     * Written - let's us construct cities with a preset citylist
+     */
     Chromosome(City[] cities, int[] cityList) {
         this.cityList = cityList;
         this.calculateCost(cities);
@@ -84,29 +89,19 @@ class Chromosome {
 
     private Random r = new Random();
 
-    public Chromosome optBreed(City[] cities, Chromosome mate) {
-        return null;
-    }
-
+    /**
+     * Written - performs inversionMutation
+     */
     public Chromosome mutate(City[] cities) {
         int length = cityList.length;
         boolean good = false;
-        int a = 0, b = 0;
-        while (a == b) {
-            a = r.nextInt(length);
-            b = r.nextInt(length);
-        }
-        if (b < a) {
-            int temp = b;
-            b = a;
-            a = temp;
-        }
+        int[] x = randomRange(length);
+        int a=x[0], b=x[1];
         int interval = b - a;
         int[] mutatedCityList = new int[length];
         for (int i = 0; i < length; i++) {
             mutatedCityList[i] = getCity(i);
         }
-    
         for (int i = 0; i < interval/2; i++) {
             int temp = mutatedCityList[a+i];
             mutatedCityList[a+i] = mutatedCityList[b-i];
@@ -115,6 +110,9 @@ class Chromosome {
         return new Chromosome(cities, mutatedCityList);
     }
 
+    /**
+     * WRITTEN - utility method to create random range
+     */
     private int[] randomRange(int upperBound) {
         int start = 0, end = 0;
         do {
@@ -129,6 +127,10 @@ class Chromosome {
         return new int[] { start, end };
     }
 
+
+    /**
+     * WRITTEN - utility method to check if two chromosomes are equal by city
+     **/
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Chromosome)) {
@@ -147,6 +149,10 @@ class Chromosome {
         }
     }
 
+    /**
+     * WRITTEN
+     * Performs partially mapped crossover between two cities
+     **/
     public Chromosome pmx(City[] cities,  Chromosome mate) {
         int length = cityList.length;
         int[] x = randomRange(length);
@@ -184,14 +190,6 @@ class Chromosome {
                 }
             }
         }
-        /*
-        for (int i = 0 ; i < length; i++) {
-            System.out.print("(" + getCity(i) + ", ");
-            System.out.print(newList[i] + ")");
-            System.out.print(" ");
-        }
-        System.out.println();
-        */
         /**
          * Copy all remaining unplaced elements from this into final list
          **/
@@ -204,32 +202,6 @@ class Chromosome {
                 count+=1;
             }
         }
-        /*
-        System.out.println("Range: " + x[0] + ", " + x[1]);
-        System.out.println("Count: " + count);
-        */
-        /*
-        boolean ok = false;
-        for (int i = 0; i < newList.length; i++) {
-            if (newList[i] != getCity(i)) {
-                ok = true;
-                break;
-            }
-        }
-        if (!ok) {
-            throw new IllegalArgumentException("Origional and PMX are the same!");
-        }
-        ok = false;
-        for (int i = 0; i < newList.length; i++) {
-            if (newList[i] != mate.getCity(i)) {
-                ok = true;
-                break;
-            }
-        }
-        if (!ok) {
-            throw new IllegalArgumentException("Mate and PMX are the same!");
-        }
-        */
         return new Chromosome(cities, newList);
     }
 
@@ -299,6 +271,10 @@ class Chromosome {
         }
     }
 
+    /**
+     * WRITTEN
+     * Utility method to check if a chromosome contains duplicate elements - illegal in permutation
+     **/
     public boolean hasDuplicates() {
         TreeSet<Integer> found = new TreeSet<>();
         for (int city: this.cityList) {
