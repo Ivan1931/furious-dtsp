@@ -21,6 +21,7 @@ class Chromosome {
     Chromosome(City[] cities) {
         Random generator = new Random();
         cityList = new int[cities.length];
+        int[] copyCityList = new int[cities.length];
         //cities are visited based on the order of an integer representation [o,n] of each of the n cities.
         for (int x = 0; x < cities.length; x++) {
             cityList[x] = x;
@@ -33,8 +34,33 @@ class Chromosome {
             cityList[y] = cityList[randomNum];
             cityList[randomNum] = temp;
         }
+        calculateCost(cities);
+        double cost1 = getCost();
+        for (int i = 0 ;  i < cityList.length; i++) copyCityList[i] = cityList[i];
+
+        int r = generator.nextInt(cityList.length);
+        for(int i = r; i < cityList.length; i++) {
+            int closest = i;
+            int currentCity = cityList[i];
+            double closestDistance = 100000.0;
+            for (int j = i+1; j < cityList.length; j++) {
+                int test = cityList[j];
+                int testDistance = cities[test].proximity(cities[currentCity]);
+                if (testDistance < closestDistance) {
+                    closestDistance = testDistance;
+                    closest = j;
+                }
+            }
+            int temp = cityList[closest];
+            cityList[closest] = cityList[i];
+            cityList[i] = temp;
+        }
 
         calculateCost(cities);
+        if (this.getCost() > cost1) {
+            cityList = copyCityList;
+            calculateCost(cities);
+        }
     }
 
     Chromosome(City[] cities, int[] cityList) {
@@ -57,6 +83,10 @@ class Chromosome {
     }
 
     private Random r = new Random();
+
+    public Chromosome optBreed(City[] cities, Chromosome mate) {
+        return null;
+    }
 
     public Chromosome mutate(City[] cities) {
         int length = cityList.length;
@@ -90,7 +120,7 @@ class Chromosome {
         do {
             start = r.nextInt(upperBound);
             end = r.nextInt(upperBound);
-        } while(start != end);
+        } while(start == end);
         if (end < start) {
             int temp = start;
             start = end;
@@ -99,25 +129,49 @@ class Chromosome {
         return new int[] { start, end };
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Chromosome)) {
+            return false;
+        }
+        Chromosome that = (Chromosome) obj;
+        if (this.cityList.length  == that.cityList.length) {
+            for (int i = 0; i < this.cityList.length; i++) {
+                if (this.getCity(i) != that.getCity(i)) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public Chromosome pmx(City[] cities,  Chromosome mate) {
         int length = cityList.length;
         int[] x = randomRange(length);
         int[] newList = new int[length];
+        /*
+        if (this.hasDuplicates()) {
+            throw new IllegalArgumentException("this has duplicates");
+        }
+        if (mate.hasDuplicates()) {
+            throw new IllegalArgumentException("mate has duplicates");
+        }
+        */
+        if (this.equals(mate)) {
+            mate = mate.mutate(cities);
+        }
         // Store all the things that we have already placed for easy access
         TreeSet<Integer> placed = new TreeSet<Integer>();
         // Place the middle segment
-        for (int i = x[0]; i < x[1]; i++) {
+        //
+        for (int i = x[0]; i <= x[1]; i++) {
             int candidate = getCity(i);
             newList[i] = candidate;
             placed.add(candidate);
         }
-        /** For each element in middle segment of mate
-         *  -> If it has not been placed
-         *      -> Check the element from first list already placed that is in it's segment
-         *      -> Find elements index in mate
-         *      -> Place unplaced element in that index
-         **/
-        for (int i = x[0]; i < x[1]; i++) {
+        for (int i = x[0]; i <= x[1]; i++) {
             int candidate = mate.getCity(i);
             if (!placed.contains(candidate)) {
                 int searchFor = newList[i];
@@ -130,15 +184,52 @@ class Chromosome {
                 }
             }
         }
+        /*
+        for (int i = 0 ; i < length; i++) {
+            System.out.print("(" + getCity(i) + ", ");
+            System.out.print(newList[i] + ")");
+            System.out.print(" ");
+        }
+        System.out.println();
+        */
         /**
-         * Copy all remaining unplaced elements from mate into final list
+         * Copy all remaining unplaced elements from this into final list
          **/
         for (int i = 0; i < length; i++) {
-            int candidate = mate.getCity(i);
-            if (!placed.contains(candidate)) {
-                newList[i] = candidate;
+            newList[i] = getCity(i);
+        }
+        int count = 0;
+        for (int i = 0; i < length; i++) {
+            if (newList[i] == 0) {
+                count+=1;
             }
         }
+        /*
+        System.out.println("Range: " + x[0] + ", " + x[1]);
+        System.out.println("Count: " + count);
+        */
+        /*
+        boolean ok = false;
+        for (int i = 0; i < newList.length; i++) {
+            if (newList[i] != getCity(i)) {
+                ok = true;
+                break;
+            }
+        }
+        if (!ok) {
+            throw new IllegalArgumentException("Origional and PMX are the same!");
+        }
+        ok = false;
+        for (int i = 0; i < newList.length; i++) {
+            if (newList[i] != mate.getCity(i)) {
+                ok = true;
+                break;
+            }
+        }
+        if (!ok) {
+            throw new IllegalArgumentException("Mate and PMX are the same!");
+        }
+        */
         return new Chromosome(cities, newList);
     }
 
@@ -212,6 +303,7 @@ class Chromosome {
         TreeSet<Integer> found = new TreeSet<>();
         for (int city: this.cityList) {
             if (found.contains(city)) {
+                System.out.println("Duplicate found: " + city);
                 return true;
             } else {
                 found.add(city);

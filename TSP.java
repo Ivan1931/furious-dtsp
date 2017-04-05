@@ -145,23 +145,30 @@ public class TSP {
 
     public static ArrayList<Chromosome> getTournamentSelection(int k, int tournaments) {
         assert(tournaments % 2 == 0);
-        ArrayList<Chromosome> breaders = new ArrayList<>();
+        TreeSet<Integer> breaders = new TreeSet<>();
         int length = chromosomes.length;
         Random r = new Random();
-        for (int i = 0; i < tournaments; i++) {
-            ArrayList<Chromosome> tournament = new ArrayList<>();
+        while (breaders.size() < tournaments) {
+            ArrayList<Integer> tournament = new ArrayList<>();
             for (int j = 0; j < k; j++) {
                 int idx = r.nextInt(length);
-                tournament.add(chromosomes[idx]);
+                tournament.add(idx);
             }
             breaders.add(
                     tournament
                         .stream()
-                        .max((c1, c2) -> Double.compare(c1.getCost(), c2.getCost()))
+                        .max((c1, c2) -> {
+                            return Double.compare(chromosomes[c1].getCost(), 
+                                               chromosomes[c2].getCost());
+                        })
                         .get()
             );
         }
-        return breaders;
+        ArrayList<Chromosome> winners = new ArrayList<>();
+        for (int idx : breaders) {
+            winners.add(chromosomes[idx]);
+        }
+        return winners;
     }
 
     public static ArrayList<Chromosome> getFitnessProporitional(int k, ArrayList<Chromosome> chromos) {
@@ -192,24 +199,22 @@ public class TSP {
 
     public static ArrayList<Chromosome> getElite(int number, double eliteInfluence, ArrayList<Chromosome> population) {
         ArrayList<Chromosome> elite = population.stream()
-                         .sorted((p1, p2) -> Double.compare(p1.getCost(), p2.getCost()))
+                         .sorted((c1, c2) -> {
+                             return Double.compare(c1.getCost(), c2.getCost());
+                         })
                          .limit(number)
                          .collect(Collectors.toCollection(ArrayList::new));
         Random r = new Random();
         for (int i = 0; i < number; i++) {
             double p = r.nextDouble();
-            if (eliteInfluence < p) {
-                int idx = r.nextInt(population.size());
-                elite.set(i, population.get(idx));
-            }
+            int idx = r.nextInt(population.size());
+            elite.set(i, population.get(idx));
         }
         return elite;
 
     }
 
-    public static void eliteTournament() {
-        int numberParents = 8;
-        int tournamentDiversity = 4;
+    public static void eliteTournament(int numberParents, int tournamentDiversity, double elitismRate) {
         ArrayList<Chromosome> offspring = getTournamentSelection(tournamentDiversity, numberParents);
         for (int i = 0; i < numberParents; i += 2) {
             Chromosome p1 = offspring.get(i);
@@ -220,9 +225,10 @@ public class TSP {
         for (Chromosome c: chromosomes) {
             offspring.add(c);
         }
-        offspring = getElite(chromosomes.length, 0.7, offspring);
+        offspring = getElite(chromosomes.length, elitismRate, offspring);
         for (int i = 0; i < chromosomes.length; i++) {
-            chromosomes[i] = offspring.get(i);
+            Chromosome replacement = offspring.get(i);
+            chromosomes[i] = replacement;
         }
     }
 
@@ -281,8 +287,8 @@ public class TSP {
 
     public static void eliteSelection() {
         int length = chromosomes.length;
-        int numberBest = 10;
-        int numberAverage = 4;
+        int numberBest = 20;
+        int numberAverage = 8;
         int numberWorst = 4;
         ArrayList<Chromosome> best = getBest(numberBest);
         ArrayList<Chromosome> children = new ArrayList<Chromosome>();
@@ -311,6 +317,7 @@ public class TSP {
     }
 
     public static void evolve() {
+        eliteTournament(20, 4, 0.1);
         inversionMutation(350);
         checkSanity();
     }
