@@ -269,7 +269,7 @@ public class TSP {
     }
 
     public static void evolve() {
-        eliteTournament(30, 20, 0.7);
+        eliteTournament(30, 10, 0.05);
         inversionMutation(100);
         checkSanity();
     }
