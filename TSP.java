@@ -243,6 +243,7 @@ public class TSP {
         return worst;
     }
 
+    
     public static ArrayList<Chromosome> getRandom(int start, int end, int number) {
         TreeSet<Integer> chosen = new TreeSet<>();
         assert(0 < (end - start));
@@ -268,10 +269,42 @@ public class TSP {
                     .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    public static int checkDiversity() {
+        int duplicates = 0;
+        for (int i = 0; i < chromosomes.length; i++) {
+            for (int j = 0; j < chromosomes.length; j++) {
+                if (j != i) {
+                    if (chromosomes[i].equals(chromosomes[j])) {
+                        duplicates+=1;
+                    }
+                }
+            }
+        }
+        System.out.println("Number of duplicates: " + duplicates);
+        return duplicates;
+
+    }
+
+    public static void checkAverageFitness() {
+        double costs = 0.0;
+        for (Chromosome c : chromosomes) {
+            costs += c.getCost();
+        }
+        System.out.println("Average Fitness: " + costs/chromosomes.length);
+    }
+
     public static void evolve() {
-        eliteTournament(30, 10, 0.05);
+        for (Chromosome c: chromosomes) {
+            c.calculateCost(cities);
+        }
+        eliteTournament(20, 10, 0.2);
         inversionMutation(100);
         checkSanity();
+        /*
+        checkAverageFitness();
+        checkDiversity();
+        */
+
     }
 
     /**

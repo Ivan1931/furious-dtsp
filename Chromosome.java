@@ -36,12 +36,10 @@ class Chromosome {
             cityList[y] = cityList[randomNum];
             cityList[randomNum] = temp;
         }
-        calculateCost(cities);
         double cost1 = getCost();
         for (int i = 0 ;  i < cityList.length; i++) copyCityList[i] = cityList[i];
 
-        int r = generator.nextInt(cityList.length);
-        for(int i = r; i < cityList.length-1; i++) {
+        for(int i = 1; i < cityList.length-1; i++) {
             int closest = i;
             int currentCity = cityList[i];
             double closestDistance = 100000.0;
@@ -57,12 +55,8 @@ class Chromosome {
             cityList[closest] = cityList[i+1];
             cityList[i+1] = temp;
         }
-
         calculateCost(cities);
-        if (this.getCost() > cost1) {
-            cityList = copyCityList;
-            calculateCost(cities);
-        }
+
     }
 
     /**
