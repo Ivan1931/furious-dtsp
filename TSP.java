@@ -297,8 +297,8 @@ public class TSP {
         for (Chromosome c: chromosomes) {
             c.calculateCost(cities);
         }
-        eliteTournament(20, 10, 0.2);
-        inversionMutation(100);
+        eliteTournament(5, 4, 0.2);
+        inversionMutation(80);
         checkSanity();
         /*
         checkAverageFitness();
