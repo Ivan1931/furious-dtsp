@@ -1,13 +1,17 @@
+## About
+
+Evolutionary Computing Assignment by **Jonah Hooper** - **HPRJON001**
+
 ## Summary of Algorithm
 
 * Tournament parent selection
-  * **20** tournaments
-  * **5** participants in each tournament 
+  * **5** tournaments
+  * **4** participants in each tournament 
 * Partially mapped crossover recombination
-* Pure elitism survivor selection
+* Semi-elitism survivor selection
   * The best children plus a few randomly selected ones are added to the survivors
 * Mutation through inversion
-  * Replace the worst children with the best mutants
+  * In addition, replace the worst children with the best mutants
 * Heursistically choose **initial** population
   * The inital population is chosen by randomly selecting the first element of the *cityList*
   * The second element is the one that has the lowest proximity to the first
@@ -98,4 +102,4 @@ The differences between solutions can be summarised by the following table:
 | Mutation           | Inversion                        | Inversion                   |
 | Heuristic          | Nearset neighbour city sort      | Nearest neighbour city Sort |
 
-There is a slight difference in the performance of our algorithms. My solution introduces a small number of poorer solutions as part of it's survivor selection. It also makes use of tournament selection and also some recombination. As a result the solution seems to introduce slightly more poor solutions in persuit of exploration rather than exploitation. The difference between the solutions is small because the underlying techniques that they use are similar. The **heuristic** and **inversion mutation** are extremely powerful at obtaining a good solution very quickly before cities move. Due to the rapidity at which the cities change there is little time to create a superior solution from a more diverse population of solutions. Overall, that could account for the small but noticable differences in performance between our algorithms. 
+There is a slight difference in the performance of our algorithms, with my algorithm performing slightly worse. My solution introduces a small number of poorer solutions as part of it's survivor selection. It also makes use of tournament selection and also some recombination. As a result the solution seems to introduce slightly more poor solutions in persuit of exploration rather than exploitation. The difference between the solutions is small because the underlying techniques that they use are similar. The **heuristic** and **inversion mutation** are extremely powerful at obtaining a good solution very quickly before cities move. They are present in a similar manner in both solutions. Due to the high frequency at which the cities change there probably not enough time for the effects of exploration to be significant on the comparitive performance of the two solutions. 
