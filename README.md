@@ -2,6 +2,8 @@
 
 Evolutionary Computing Assignment by **Jonah Hooper** - **HPRJON001**
 
+Student compared too was **Erin Versveld** - **VRSERI001**
+
 ## Summary of Algorithm
 
 * Tournament parent selection
@@ -55,7 +57,7 @@ data:  data
 W = 0.98383, p-value = 0.2608
 ```
 
-With a statistical significance of *0.05* we cannot reject the hypothesis that our sample does not come from a population that is normally distributed. 
+With a statistical significance of *0.05* we cannot reject the null hypothesis that our results sample does come from a population that is normally distributed. 
 
 ## Comparison With Classmate
 
@@ -63,7 +65,7 @@ With a statistical significance of *0.05* we cannot reject the hypothesis that o
 
 | Name          | Student Number |
 | ------------- | -------------- |
-| Erin Versfeld | Vrseri001      |
+| Erin Versfeld | VRSERI001      |
 
 ### Statistical Significance Test
 
@@ -88,7 +90,7 @@ mean of x mean of y
   3272.13   3215.31 
 ```
 
-Our null hypothisis $H_0$ is that our two algorithms have the same performance and thus sample mean. With a *p-value* of *0.04174* we can reject the null hypothesis that our results means have the same mean with a statistical power $\alpha$ of $\alpha < 0.05$ . From this we can conclude that Erins solution slightly outperforms my solution. 
+Our null hypothisis $H_0$ is that our two algorithms have the same performance and thus the same sample mean. With a *p-value* of *0.04174* we can reject the null hypothesis that our result have the same mean with a statistical power $\alpha$ of $\alpha < 0.05$ . From this we can conclude that Erins solution slightly outperforms my solution. 
 
 ### Explanation
 
@@ -102,4 +104,4 @@ The differences between solutions can be summarised by the following table:
 | Mutation           | Inversion                        | Inversion                   |
 | Heuristic          | Nearset neighbour city sort      | Nearest neighbour city Sort |
 
-There is a slight difference in the performance of our algorithms, with my algorithm performing slightly worse. My solution introduces a small number of poorer solutions as part of it's survivor selection. It also makes use of tournament selection and also some recombination. As a result the solution seems to introduce slightly more poor solutions in persuit of exploration rather than exploitation. The difference between the solutions is small because the underlying techniques that they use are similar. The **heuristic** and **inversion mutation** are extremely powerful at obtaining a good solution very quickly before cities move. They are present in a similar manner in both solutions. Due to the high frequency at which the cities change there probably not enough time for the effects of exploration to be significant on the comparitive performance of the two solutions. 
+There is a slight difference in the performance of our algorithms, with my algorithm performing slightly worse. My solution introduces a small number of poorer solutions as part of it's survivor selection. It also makes use of tournament selection and also some recombination using partially mapped crossover. As a result the solution seems to introduce slightly more poor solutions in persuit of exploration rather than exploitation. The difference between the solutions is small because the underlying techniques that they use are similar. The **heuristic** and **inversion mutation** are extremely powerful at obtaining a good solution very quickly before cities move. They are present in a similar manner in both solutions. Due to the high frequency at which the cities change there probably not enough time for the effects of exploration to be significant on the comparitive performance of the two solutions. 
